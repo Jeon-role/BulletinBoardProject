@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -28,13 +31,10 @@ public class User {
     private UserRoleEnum role;
 
 
-
     public User(String username, String password,UserRoleEnum role) {
         this.username = username;
         this.password = password;
         this.role=role;
-
-
     }
 }
 

@@ -1,15 +1,15 @@
 package com.board.bulletinboardproject.service;
 
 import com.board.bulletinboardproject.dto.LoginRequestDto;
-import com.board.bulletinboardproject.dto.MsgStatusDto;
 import com.board.bulletinboardproject.dto.SignupRequestDto;
+import com.board.bulletinboardproject.dto.StatusDto;
 import com.board.bulletinboardproject.entity.User;
 import com.board.bulletinboardproject.entity.UserRoleEnum;
 import com.board.bulletinboardproject.jwt.JwtUtil;
 import com.board.bulletinboardproject.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +32,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
     }
-    public MsgStatusDto signup(SignupRequestDto signupRequestDto) {
+    public ResponseEntity<StatusDto> signup(SignupRequestDto signupRequestDto) {
         String username = signupRequestDto.getUsername();
         String password = passwordEncoder.encode(signupRequestDto.getPassword());
 
@@ -54,10 +54,10 @@ public class UserService {
 
         User user = new User(username, password, role);
         userRepository.save(user);
-        return new MsgStatusDto("가입성공", HttpStatusCode.valueOf(200).toString());
+        return ResponseEntity.ok(new StatusDto("가입성공", HttpStatusCode.valueOf(200).toString()));
 
     }
-    public MsgStatusDto login(LoginRequestDto loginRequestDto, HttpServletResponse res){
+    public ResponseEntity<StatusDto> login(LoginRequestDto loginRequestDto, HttpServletResponse res){
         String username=loginRequestDto.getUsername();
         String password=loginRequestDto.getPassword();
 
@@ -73,9 +73,10 @@ public class UserService {
 
         //JWT 생성 및 쿠키게 저장후 response 객체에 추가
         String token= jwtUtil.createToken(user.getUsername(),user.getRole());
-        jwtUtil.addJwtToCookie(token,res);
+        res.addHeader(JwtUtil.AUTHORIZATION_HEADER,token);
 
-        return new MsgStatusDto("로그인성공", HttpStatusCode.valueOf(200).toString());
+
+        return ResponseEntity.ok(new StatusDto("로그인성공", HttpStatusCode.valueOf(200).toString()));
     }
 
 

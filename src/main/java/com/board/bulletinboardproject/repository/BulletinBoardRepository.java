@@ -11,5 +11,4 @@ public interface BulletinBoardRepository extends JpaRepository<BulletinBoard,Lon
     List<BulletinBoard> findByIdOrderByModifiedAtDesc(Long id);
 
 
-
 }

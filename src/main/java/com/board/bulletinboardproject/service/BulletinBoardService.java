@@ -3,11 +3,19 @@ package com.board.bulletinboardproject.service;
 
 import com.board.bulletinboardproject.dto.BulletinBoardRequestDto;
 import com.board.bulletinboardproject.dto.BulletinBoardResponseDto;
+import com.board.bulletinboardproject.dto.CommentResponseDto;
 import com.board.bulletinboardproject.entity.BulletinBoard;
+import com.board.bulletinboardproject.entity.Comment;
+import com.board.bulletinboardproject.entity.User;
+import com.board.bulletinboardproject.jwt.JwtUtil;
 import com.board.bulletinboardproject.repository.BulletinBoardRepository;
+import com.board.bulletinboardproject.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -15,68 +23,151 @@ import java.util.List;
 public class BulletinBoardService {
 
     private final BulletinBoardRepository bulletinBoardRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
-    public BulletinBoardService(BulletinBoardRepository bulletinBoardRepository){
+    public BulletinBoardService(BulletinBoardRepository bulletinBoardRepository,UserRepository userRepository ,JwtUtil jwtUtil){
         this.bulletinBoardRepository=bulletinBoardRepository;
+        this.userRepository=userRepository;
+        this.jwtUtil=jwtUtil;
     }
 
-    public BulletinBoardResponseDto createBulletinBoard(BulletinBoardRequestDto bulletinBoardRequestDto){
-        BulletinBoard bulletinBoard = new BulletinBoard(bulletinBoardRequestDto);
+    public BulletinBoardResponseDto createBulletinBoard(BulletinBoardRequestDto bulletinBoardRequestDto, HttpServletRequest request){
+        String headerToken= request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
 
-        BulletinBoard saveBulletinBoard = bulletinBoardRepository.save(bulletinBoard);
-        BulletinBoardResponseDto bulletinBoardResponseDto = new BulletinBoardResponseDto(saveBulletinBoard);
+        String token = jwtUtil.substringToken(headerToken);
 
-        return bulletinBoardResponseDto;
+        Claims claims;
+        if(token != null){
+            if(jwtUtil.validateToken(token)){
+                claims= jwtUtil.getUserInfoFromToken(token);
+            }
+            else {
+                throw new IllegalArgumentException("token Error");
+            }
+            User user =userRepository.findByUsername(claims.getSubject()).orElseThrow(NullPointerException::new);
+            bulletinBoardRequestDto.setUsername(user.getUsername());
+
+            BulletinBoard bulletinBoard = new BulletinBoard(bulletinBoardRequestDto);
+
+            BulletinBoard saveBulletinBoard = bulletinBoardRepository.save(bulletinBoard);
+            BulletinBoardResponseDto bulletinBoardResponseDto = new BulletinBoardResponseDto(saveBulletinBoard);
+
+            return bulletinBoardResponseDto;
+        }
+        else {
+            return null;
+        }
     }
 
     public List<BulletinBoardResponseDto> getBulletinBoards(){
-        return bulletinBoardRepository.findAllByOrderByModifiedAtDesc().stream().map(BulletinBoardResponseDto::new).toList();
+
+
+
+        List<BulletinBoard> bulletinBoardList = bulletinBoardRepository.findAllByOrderByModifiedAtDesc();
+        List<BulletinBoardResponseDto> responseDtoList = new ArrayList<>();
+
+
+
+        for(BulletinBoard bulletinBoard : bulletinBoardList){
+            List<CommentResponseDto> commentList= new ArrayList<>();
+            for(Comment comment :bulletinBoard.getComments()){
+                commentList.add(new CommentResponseDto(comment));
+            }
+            responseDtoList.add(new BulletinBoardResponseDto(bulletinBoard,commentList));
+        }
+
+        return responseDtoList;
     }
 
     public BulletinBoardResponseDto findOneBulletinBoard(Long id){
+        List<BulletinBoard> bulletinBoardList = bulletinBoardRepository.findByIdOrderByModifiedAtDesc(id);
+        List<CommentResponseDto> commentList= new ArrayList<>();
+        for(BulletinBoard bulletinBoard : bulletinBoardList){
+            for(Comment comment :bulletinBoard.getComments()){
+                commentList.add(new CommentResponseDto(comment));
+            }
+        }
+
+
         BulletinBoard board =bulletinBoardRepository.findById(id).orElseThrow(()->
                 new IllegalArgumentException("선택한 게시판은 존재하지 않습니다. 다시해주세요"));
-        return new BulletinBoardResponseDto(board);
+        return new BulletinBoardResponseDto(board,commentList);
     }
 
 
 
     @Transactional
-    public BulletinBoardResponseDto updateBulletinBoard(Long id , BulletinBoardRequestDto bulletinBoardRequestDto){
-        BulletinBoard board= findBulletinBoard(id);
-        for(BulletinBoard bulletinBoard: bulletinBoardRepository.findByIdOrderByModifiedAtDesc(id)){
-            if(checkingPassword(bulletinBoard.getPassword(),bulletinBoardRequestDto.getPassword())){
+    public BulletinBoardResponseDto updateBulletinBoard(Long id , BulletinBoardRequestDto bulletinBoardRequestDto,HttpServletRequest request){
+        String headerToken= request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
+
+        String token = jwtUtil.substringToken(headerToken);
+        Claims claims;
+        if(token != null) {
+            if (jwtUtil.validateToken(token)) {
+                claims = jwtUtil.getUserInfoFromToken(token);
+            } else {
+                throw new IllegalArgumentException("token Error");
+            }
+            User user =userRepository.findByUsername(claims.getSubject()).orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+            BulletinBoard board=bulletinBoardRepository.findById(id).orElseThrow(()->
+                    new IllegalArgumentException("선택한 게시판은 존재하지 않습니다. 다시해주세요"));
+
+            if(user.getUsername().equals(board.getUsername())){
                 board.update(bulletinBoardRequestDto);
-                return findOneBulletinBoard(id);
+                return new BulletinBoardResponseDto(board);
+            }
+            else {
+                throw new IllegalArgumentException("작성자가 일치하지 않습니다.");
             }
         }
-
-        return findOneBulletinBoard(id);
+        else {
+            return null;
+        }
     }
+    @Transactional
+    public BulletinBoardResponseDto updateCompletedBulletinBoard(Long id, BulletinBoardRequestDto bulletinBoardrequestDto, HttpServletRequest request) {
+        String headerToken= request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
 
+        String token = jwtUtil.substringToken(headerToken);
+        Claims claims;
+        if(token != null) {
+            if (jwtUtil.validateToken(token)) {
+                claims = jwtUtil.getUserInfoFromToken(token);
+            } else {
+                throw new IllegalArgumentException("token Error");
+            }
+            User user =userRepository.findByUsername(claims.getSubject()).orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+            BulletinBoard board=bulletinBoardRepository.findById(id).orElseThrow(()->
+                    new IllegalArgumentException("선택한 게시판은 존재하지 않습니다. 다시해주세요"));
 
-    public Long deleteBulletinBoard(Long id,String inputPsw) {
-        for(BulletinBoard bulletinBoard: bulletinBoardRepository.findByIdOrderByModifiedAtDesc(id)){
-            if(checkingPassword(bulletinBoard.getPassword(),inputPsw)){
-                BulletinBoard board = findBulletinBoard(id);
-                bulletinBoardRepository.delete(board);
-                return id;
+            if(user.getUsername().equals(board.getUsername())){
+                board.updateCompleted(bulletinBoardrequestDto);
+                return new BulletinBoardResponseDto(board);
+            }
+            else {
+                throw new IllegalArgumentException("작성자가 일치하지 않습니다.");
             }
         }
-        return 0L;
+        else {
+            return null;
+        }
     }
 
 
 
 
-    private BulletinBoard findBulletinBoard(Long id){
-        return bulletinBoardRepository.findById(id).orElseThrow(()->
-                new IllegalArgumentException("선택한 게시판은 존재하지 않습니다. 다시해주세요"));
+//    public Long deleteBulletinBoard(Long id,String inputPsw) {
+//        for(BulletinBoard bulletinBoard: bulletinBoardRepository.findByIdOrderByModifiedAtDesc(id)){
+//            if(checkingPassword(bulletinBoard.getPassword(),inputPsw)){
+//                BulletinBoard board = findBulletinBoard(id);
+//                bulletinBoardRepository.delete(board);
+//                return id;
+//            }
+//        }
+//        return 0L;
+//    }
 
-    }
 
 
-    public boolean checkingPassword(String nowPassword,String changePassword) {
-        return nowPassword.equals(changePassword);
-    }
 }

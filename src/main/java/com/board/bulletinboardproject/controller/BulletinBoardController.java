@@ -4,6 +4,7 @@ package com.board.bulletinboardproject.controller;
 import com.board.bulletinboardproject.dto.BulletinBoardRequestDto;
 import com.board.bulletinboardproject.dto.BulletinBoardResponseDto;
 import com.board.bulletinboardproject.service.BulletinBoardService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,16 +21,11 @@ public class BulletinBoardController {
     }
 
     @PostMapping("/boards")
-    public BulletinBoardResponseDto createBulletinBoard(@RequestBody BulletinBoardRequestDto bulletinBoardRequestDto) {
+    public BulletinBoardResponseDto createBulletinBoard(@RequestBody BulletinBoardRequestDto bulletinBoardRequestDto, HttpServletRequest request) {
 
-        return bulletinBoardService.createBulletinBoard(bulletinBoardRequestDto);
+        return bulletinBoardService.createBulletinBoard(bulletinBoardRequestDto,request);
     }
 
-//    @GetMapping("/boards")
-//    public BulletinBoardResponseDto createBulletinBoard(@RequestBody BulletinBoardRequestDto bulletinBoardRequestDto) {
-//
-//        return bulletinBoardService.createBulletinBoard(bulletinBoardRequestDto);
-//    }
 
     @GetMapping("/boards")
     public List<BulletinBoardResponseDto> getBulletinBoard(){
@@ -37,21 +33,26 @@ public class BulletinBoardController {
     }
 
     @GetMapping("/boards/{id}")
-    public BulletinBoardResponseDto findBulletinBoard(@PathVariable Long id){
+    public BulletinBoardResponseDto findBulletinOneBoard(@PathVariable Long id){
         return bulletinBoardService.findOneBulletinBoard(id);
     }
 
 
     @PutMapping("/boards/{id}")
-    public BulletinBoardResponseDto updateBulletinBoard(@PathVariable Long id, @RequestBody BulletinBoardRequestDto bulletinBoardrequestDto) {
-        return bulletinBoardService.updateBulletinBoard(id, bulletinBoardrequestDto);
+    public BulletinBoardResponseDto updateBulletinBoard(@PathVariable Long id, @RequestBody BulletinBoardRequestDto bulletinBoardrequestDto ,HttpServletRequest request) {
+        return bulletinBoardService.updateBulletinBoard(id, bulletinBoardrequestDto,request);
+    }
+
+    @PutMapping("/boards/completed/{id}")
+    public BulletinBoardResponseDto updateCompletedBulletinBoard(@PathVariable Long id, @RequestBody BulletinBoardRequestDto bulletinBoardrequestDto ,HttpServletRequest request) {
+        return bulletinBoardService.updateCompletedBulletinBoard(id, bulletinBoardrequestDto,request);
     }
 
 
-    @DeleteMapping("/boards/{id}/{inputPsw}")
-    public Long deleteBulletinBoard(@PathVariable Long id ,@PathVariable String inputPsw) {
-        return bulletinBoardService.deleteBulletinBoard(id,inputPsw);
-    }
+//    @DeleteMapping("/boards/{id}/{inputPsw}")
+//    public Long deleteBulletinBoard(@PathVariable Long id ,@PathVariable String inputPsw) {
+//        return bulletinBoardService.deleteBulletinBoard(id,inputPsw);
+//    }
 
 
 
