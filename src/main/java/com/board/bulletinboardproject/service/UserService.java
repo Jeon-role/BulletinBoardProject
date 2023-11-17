@@ -38,7 +38,8 @@ public class UserService {
 
         Optional<User> checkUsername = userRepository.findByUsername(username);
         if (checkUsername.isPresent()) {
-            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
+//            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
+            return ResponseEntity.ok(new StatusDto("중복된 username 입니다", HttpStatusCode.valueOf(400).toString()));
         }
 
 
@@ -61,17 +62,24 @@ public class UserService {
         String username=loginRequestDto.getUsername();
         String password=loginRequestDto.getPassword();
 
+
+
+
         User user= userRepository.findByUsername(username).orElseThrow(
                 () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
         );
-
-
-        //비밀번호 확인
-        if(!passwordEncoder.matches(password,user.getPassword())){
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        if(!user.getUsername().equals(username)){
+            return ResponseEntity.ok(new StatusDto("회원을 찾을 수 없습니다", HttpStatusCode.valueOf(400).toString()));
         }
 
-        //JWT 생성 및 쿠키게 저장후 response 객체에 추가
+
+
+        if(!passwordEncoder.matches(password,user.getPassword())){
+            return ResponseEntity.ok(new StatusDto("회원을 찾을 수 없습니다", HttpStatusCode.valueOf(400).toString()));
+//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+
         String token= jwtUtil.createToken(user.getUsername(),user.getRole());
         res.addHeader(JwtUtil.AUTHORIZATION_HEADER,token);
 
