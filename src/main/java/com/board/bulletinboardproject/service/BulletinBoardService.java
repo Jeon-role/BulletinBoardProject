@@ -12,6 +12,10 @@ import com.board.bulletinboardproject.repository.BulletinBoardRepository;
 import com.board.bulletinboardproject.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +65,24 @@ public class BulletinBoardService {
     }
 
     public List<BulletinBoardResponseDto> getBulletinBoards(){
+        String sortBy="username";
+        boolean isAsc=false;
+        int page=0;
+        int size=20;
+        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction,sortBy);
+        Pageable pageable = PageRequest.of(page,size,sort);
+        Page<BulletinBoard> boardList;
+
+
+
+
+        boardList=bulletinBoardRepository.findAll(pageable);
+
+
+//        User user =userRepository.findByUsername("hoon").orElseThrow(()->
+//                new IllegalArgumentException("없어요"));
+//        List<BulletinBoard> bulletinBoardList = bulletinBoardRepository.findAllByUsername(user.getUsername());
 
 
 
@@ -69,7 +91,7 @@ public class BulletinBoardService {
 
 
 
-        for(BulletinBoard bulletinBoard : bulletinBoardList){
+        for(BulletinBoard bulletinBoard : boardList){
             List<CommentResponseDto> commentList= new ArrayList<>();
             for(Comment comment :bulletinBoard.getComments()){
                 commentList.add(new CommentResponseDto(comment));
