@@ -10,11 +10,8 @@ import java.util.List;
 
 public interface BulletinBoardRepository extends JpaRepository<BulletinBoard,Long> {
 
-    List<BulletinBoard> findAllByOrderByModifiedAtDesc();
+    Page<BulletinBoard> findAllByOrderByModifiedAtDesc(Pageable pageable);
     List<BulletinBoard> findByIdOrderByModifiedAtDesc(Long id);
-    List<BulletinBoard> findAllByUsername(String username);
-
-//    Page<BulletinBoard>findAllByUser(User user, Pageable pageable);
 
 
 }

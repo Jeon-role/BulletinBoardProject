@@ -3,8 +3,10 @@ package com.board.bulletinboardproject.controller;
 
 import com.board.bulletinboardproject.dto.BulletinBoardRequestDto;
 import com.board.bulletinboardproject.dto.BulletinBoardResponseDto;
+import com.board.bulletinboardproject.dto.StatusDto;
 import com.board.bulletinboardproject.service.BulletinBoardService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,10 +51,10 @@ public class BulletinBoardController {
     }
 
 
-//    @DeleteMapping("/boards/{id}/{inputPsw}")
-//    public Long deleteBulletinBoard(@PathVariable Long id ,@PathVariable String inputPsw) {
-//        return bulletinBoardService.deleteBulletinBoard(id,inputPsw);
-//    }
+    @DeleteMapping("/boards/{id}")
+    public ResponseEntity<StatusDto> deleteBulletinBoard(@PathVariable Long id ,HttpServletRequest request) {
+        return bulletinBoardService.deleteBulletinBoard(id,request);
+    }
 
 
 

@@ -4,6 +4,7 @@ package com.board.bulletinboardproject.service;
 import com.board.bulletinboardproject.dto.BulletinBoardRequestDto;
 import com.board.bulletinboardproject.dto.BulletinBoardResponseDto;
 import com.board.bulletinboardproject.dto.CommentResponseDto;
+import com.board.bulletinboardproject.dto.StatusDto;
 import com.board.bulletinboardproject.entity.BulletinBoard;
 import com.board.bulletinboardproject.entity.Comment;
 import com.board.bulletinboardproject.entity.User;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,16 +80,7 @@ public class BulletinBoardService {
 
 
 
-        boardList=bulletinBoardRepository.findAll(pageable);
-
-
-//        User user =userRepository.findByUsername("hoon").orElseThrow(()->
-//                new IllegalArgumentException("없어요"));
-//        List<BulletinBoard> bulletinBoardList = bulletinBoardRepository.findAllByUsername(user.getUsername());
-
-
-
-        List<BulletinBoard> bulletinBoardList = bulletinBoardRepository.findAllByOrderByModifiedAtDesc();
+        boardList=bulletinBoardRepository.findAllByOrderByModifiedAtDesc(pageable);
         List<BulletinBoardResponseDto> responseDtoList = new ArrayList<>();
 
 
@@ -137,7 +131,7 @@ public class BulletinBoardService {
 
             if(user.getUsername().equals(board.getUsername())){
                 board.update(bulletinBoardRequestDto);
-                return new BulletinBoardResponseDto(board);
+                return findOneBulletinBoard(board.getId());
             }
             else {
                 throw new IllegalArgumentException("작성자가 일치하지 않습니다.");
@@ -165,7 +159,7 @@ public class BulletinBoardService {
 
             if(user.getUsername().equals(board.getUsername())){
                 board.updateCompleted(bulletinBoardrequestDto);
-                return new BulletinBoardResponseDto(board);
+                return findOneBulletinBoard(board.getId());
             }
             else {
                 throw new IllegalArgumentException("작성자가 일치하지 않습니다.");
@@ -179,16 +173,36 @@ public class BulletinBoardService {
 
 
 
-//    public Long deleteBulletinBoard(Long id,String inputPsw) {
-//        for(BulletinBoard bulletinBoard: bulletinBoardRepository.findByIdOrderByModifiedAtDesc(id)){
-//            if(checkingPassword(bulletinBoard.getPassword(),inputPsw)){
-//                BulletinBoard board = findBulletinBoard(id);
-//                bulletinBoardRepository.delete(board);
-//                return id;
-//            }
-//        }
-//        return 0L;
-//    }
+    public ResponseEntity<StatusDto> deleteBulletinBoard(Long id, HttpServletRequest request) {
+        String headerToken= request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
+
+        String token = jwtUtil.substringToken(headerToken);
+        Claims claims;
+        if(token != null) {
+            if (jwtUtil.validateToken(token)) {
+                claims = jwtUtil.getUserInfoFromToken(token);
+            } else {
+                throw new IllegalArgumentException("token Error");
+            }
+            User user =userRepository.findByUsername(claims.getSubject()).orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+            BulletinBoard board=bulletinBoardRepository.findById(id).orElseThrow(()->
+                    new IllegalArgumentException("선택한 게시판은 존재하지 않습니다. 다시해주세요"));
+
+            if(user.getUsername().equals(board.getUsername())){
+                bulletinBoardRepository.delete(board);
+                return ResponseEntity.ok(new StatusDto("삭제 성공", HttpStatusCode.valueOf(200).toString()));
+            }
+            else {
+                throw new IllegalArgumentException("작성자가 일치하지 않습니다.");
+            }
+        }
+        else {
+            return ResponseEntity.ok(new StatusDto("삭제 실패", HttpStatusCode.valueOf(400).toString()));
+        }
+
+
+
+    }
 
 
 
