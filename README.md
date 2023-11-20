@@ -6,4 +6,5 @@ API 명세서
 
 
 ERD 다이어그램
+
 ![ERD Diagram](https://github.com/phantomrole/BulletinBoardProject/assets/35451795/6cfef41d-0ad6-4854-8526-50c4966958ee)
