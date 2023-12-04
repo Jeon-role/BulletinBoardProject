@@ -1,16 +1,17 @@
 package com.board.bulletinboardproject.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class StatusDto {
     private String msg;
-    private String statusCode;
-
-    public StatusDto(String msg,String statusCode){
-        this.msg=msg;
-        this.statusCode=statusCode;
-    }
+    private Integer statusCode;
 }

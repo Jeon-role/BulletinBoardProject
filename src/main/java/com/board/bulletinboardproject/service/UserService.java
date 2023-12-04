@@ -2,45 +2,39 @@ package com.board.bulletinboardproject.service;
 
 import com.board.bulletinboardproject.dto.LoginRequestDto;
 import com.board.bulletinboardproject.dto.SignupRequestDto;
-import com.board.bulletinboardproject.dto.StatusDto;
 import com.board.bulletinboardproject.entity.User;
 import com.board.bulletinboardproject.entity.UserRoleEnum;
-import com.board.bulletinboardproject.jwt.JwtUtil;
-import com.board.bulletinboardproject.repository.UserRepository;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
+import com.board.bulletinboardproject.repositoryTest.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private final JwtUtil jwtUtil;
-
     private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
 
 
 
-    public UserService(UserRepository userRepository,PasswordEncoder passwordEncoder,JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil=jwtUtil;
-    }
-    public ResponseEntity<StatusDto> signup(SignupRequestDto signupRequestDto) {
+    public void signup(SignupRequestDto signupRequestDto) {
+        System.out.println("지나감 2");
+        System.out.println("signupRequestDto.getUsername() = " + signupRequestDto.getUsername());
+        System.out.println("signupRequestDto.getPassword() = " + signupRequestDto.getPassword());
         String username = signupRequestDto.getUsername();
         String password = passwordEncoder.encode(signupRequestDto.getPassword());
 
         Optional<User> checkUsername = userRepository.findByUsername(username);
         if (checkUsername.isPresent()) {
-//            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
-            return ResponseEntity.ok(new StatusDto("중복된 username 입니다", HttpStatusCode.valueOf(400).toString()));
+            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
         }
+
 
 
         UserRoleEnum role = UserRoleEnum.USER;
@@ -53,39 +47,53 @@ public class UserService {
 
 
 
+
         User user = new User(username, password, role);
         userRepository.save(user);
-        return ResponseEntity.ok(new StatusDto("가입성공", HttpStatusCode.valueOf(200).toString()));
-
     }
-    public ResponseEntity<StatusDto> login(LoginRequestDto loginRequestDto, HttpServletResponse res){
+    public void login(LoginRequestDto loginRequestDto){
         String username=loginRequestDto.getUsername();
         String password=loginRequestDto.getPassword();
-
-
-
 
         User user= userRepository.findByUsername(username).orElseThrow(
                 () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
         );
-        if(!user.getUsername().equals(username)){
-            return ResponseEntity.ok(new StatusDto("회원을 찾을 수 없습니다", HttpStatusCode.valueOf(400).toString()));
-        }
-
-
 
         if(!passwordEncoder.matches(password,user.getPassword())){
-            return ResponseEntity.ok(new StatusDto("회원을 찾을 수 없습니다", HttpStatusCode.valueOf(400).toString()));
-//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
+//        UserLogout userLogout= new UserLogout();
+//        userLogout.setUser(user);
+//        userLogoutRepository.save(userLogout);
 
-        String token= jwtUtil.createToken(user.getUsername(),user.getRole());
-        res.addHeader(JwtUtil.AUTHORIZATION_HEADER,token);
 
-
-        return ResponseEntity.ok(new StatusDto("로그인성공", HttpStatusCode.valueOf(200).toString()));
     }
+
+//    public ResponseEntity<StatusDto> logout(HttpServletRequest request) {
+//
+//
+//        String headerToken= request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
+//        String token = jwtUtil.substringToken(headerToken);
+//        Claims claims;
+//        if(token != null) {
+//            if (jwtUtil.validateToken(token)) {
+//                claims = jwtUtil.getUserInfoFromToken(token);
+//            } else {
+//                throw new IllegalArgumentException("token Error");
+//            }
+//            User user =userRepository.findByUsername(claims.getSubject()).orElseThrow(NullPointerException::new);
+//
+//            UserLogout userLogout= userLogoutRepository.findByUser(user);
+//            userLogoutRepository.delete(userLogout);
+//
+//            return ResponseEntity.ok(new StatusDto("로그아웃 성공", HttpStatusCode.valueOf(200).toString()));
+//        }
+//        else {
+//            return null;
+//        }
+//    }
+
 
 
 }

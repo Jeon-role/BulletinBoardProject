@@ -9,18 +9,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CommentResponseDto {
+public class CommentResponseDto extends StatusDto {
     private String comment;
     private String username;
 
 
-    public CommentResponseDto(Comment comment, User user){
-        this.comment=comment.getComment();
-        this.username= user.getUsername();
-    }
-
     public CommentResponseDto(Comment comment){
         this.comment=comment.getComment();
-        this.username=comment.getUsername();
+        this.username=comment.getUser().getUsername();
     }
 }

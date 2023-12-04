@@ -24,8 +24,9 @@ public class BulletinBoard extends Timestamped {
     private String contents;
 
 
-    @Column
-    private String username;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private Boolean completed=false;
@@ -34,10 +35,10 @@ public class BulletinBoard extends Timestamped {
     private List<Comment> comments = new ArrayList<>();
 
 
-    public BulletinBoard(BulletinBoardRequestDto bulletinBoardRequestDto){
+    public BulletinBoard(BulletinBoardRequestDto bulletinBoardRequestDto,User user){
         this.title= bulletinBoardRequestDto.getTitle();
         this.contents= bulletinBoardRequestDto.getContents();
-        this.username=bulletinBoardRequestDto.getUsername();
+        this.user=user;
     }
 
 

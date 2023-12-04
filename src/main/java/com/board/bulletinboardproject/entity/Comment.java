@@ -24,14 +24,15 @@ public class Comment {
     private BulletinBoard board;
 
 
-    @Column
-    private String username;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
 
     public Comment(CommentRequestDto commentRequestDto,BulletinBoard board,User user){
         this.comment=commentRequestDto.getComment();
-        this.username=user.getUsername();
         this.board=board;
+        this.user=user;
     }
     public void update(CommentRequestDto commentRequestDto) {
         this.comment = commentRequestDto.getComment();
