@@ -1,7 +1,6 @@
 package com.board.bulletinboardproject.serviceTest;
 
 import com.board.bulletinboardproject.dto.BulletinBoardRequestDto;
-import com.board.bulletinboardproject.dto.BulletinBoardResponseDto;
 import com.board.bulletinboardproject.dto.CommentRequestDto;
 import com.board.bulletinboardproject.dto.CommentResponseDto;
 import com.board.bulletinboardproject.entity.BulletinBoard;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.autoconfigure.info.ProjectInfoProperties;
 
 import java.util.Optional;
 
